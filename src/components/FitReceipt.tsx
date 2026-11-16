@@ -88,7 +88,7 @@ export function FitReceipt() {
         </li>
         <li className={room.budget.over ? 'bad' : 'good'}>
           <span>04 BUDGET</span><i /><b>{room.budget.over ? 'OVER' : 'WITHIN'}</b>
-          <small>Room total {money(room.total)} of {money(s.budget)}. {room.budget.label}.</small>
+          <small>Item subtotal {money(room.total)} of {money(s.budget)}. {room.budget.label}. Shipping and taxes not included.</small>
         </li>
         <li className={r.renter.some((f) => f.tone === 'bad') ? 'bad' : r.renter.some((f) => f.tone === 'warn') ? 'warn' : 'good'}>
           <span>05 RENTER CHECK</span><i /><b>{r.renter.some((f) => f.tone === 'bad') ? 'HEADS UP' : 'OK'}</b>

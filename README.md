@@ -26,8 +26,8 @@ Built as a prototype on the architecture of Shopify's **Global Catalog** (discov
 4. **Ask the merchant.** Retro's Mod Egg Chair has no dimensions, so it says "Can't tell". A reply labelled as simulated appears first; only after you choose "Use these sample dimensions" does the verdict update.
 5. **Renter rules.** "No drilling" flags wall-mounted shelves, and Discover shows freestanding swaps. "Walk-up" flags pieces over 30 kg.
 6. **Discover.** Search and swap any slot across every shop. Each candidate is pre-scored for fit and shows what it adds to or saves from the total.
-7. **Budget dock.** Type your budget, and every swap and vibe change recalculates the total, what's left, the shop count and the vibe match.
-8. **View in AR** (simulated preview), **Share** (a 9:16 story card PNG), **Buy this room** (cart grouped by shop), **Checkout** (one handoff per shop).
+7. **Budget dock.** Type your budget, and every swap and vibe change recalculates the item subtotal, what's left, the shop count and the vibe match. Shipping, taxes and availability are left to each shop's checkout; the demo never invents them.
+8. **View in AR** (simulated preview), **Share** (a 9:16 story card PNG), **Buy this room** (one cart grouped by shop), **Checkout** (a separate simulated handoff to each shop).
 9. **Under the hood.** A live log of every `search_catalog`, `get_product`, `ask_business`, `cart.create`/`cart.update` and `checkout.create` call.
 
 ## Getting started
@@ -47,6 +47,8 @@ npm run test
 The site deploys to GitHub Pages on every push to `main` (`.github/workflows/deploy.yml`). In the repo settings, set **Pages → Source** to **GitHub Actions** once.
 
 ## Architecture
+
+**Who does what:** the Catalog would supply product discovery data. First Place supplies the room visualisation, style exploration, fit logic and budget comparisons. UCP would carry the commerce flow (cart, then one checkout handoff per shop). In this build, both connections are simulated.
 
 ```text
                   FIRST PLACE UI  (React, SVG room scene)

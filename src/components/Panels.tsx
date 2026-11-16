@@ -200,7 +200,7 @@ export function BudgetDock() {
     <section className={`dock ${room.budget.over ? 'over' : ''}`} aria-label="Room budget">
       <div className="dock-row">
         <div>
-          <div className="eyebrow light">Room total</div>
+          <div className="eyebrow light">Item subtotal</div>
           <div className="dock-total" aria-live="polite">{money(total)}</div>
         </div>
         <label className="dock-budget">
@@ -215,6 +215,7 @@ export function BudgetDock() {
         <span>{room.pieces} pieces · {room.shops} sample shops</span>
         <span>Vibe match {room.vibeMatch}%</span>
       </div>
+      <p className="dock-note">Items only. Shipping, taxes and availability are confirmed by each shop at checkout.</p>
       <button className="btn btn-green big" onClick={() => actions.openCart()} disabled={room.pieces === 0}>Buy this room →</button>
     </section>
   );

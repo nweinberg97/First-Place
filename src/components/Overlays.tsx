@@ -103,11 +103,15 @@ export function CartDrawer() {
           )}
         </div>
         <div className="drawer-foot">
-          <div className="row"><span>Delivery</span><span>Set by each shop at checkout</span></div>
-          <div className="row total"><span>Room total</span><b>{money(room.total)}</b></div>
+          <div className="row total"><span>Item subtotal</span><b>{money(room.total)}</b></div>
+          <div className="row"><span>Shipping, taxes, availability</span><span>Confirmed by each shop at checkout</span></div>
           <div className={`row ${room.budget.over ? 'neg' : 'pos'}`}><span>Budget {money(s.budget)}</span><span>{room.budget.label}</span></div>
-          <button className="btn btn-green big" disabled={room.pieces === 0} onClick={() => actions.checkout()}>Check out {groups.size} shops →</button>
-          <p className="fine">One room, one tap. Each shop checks out separately and stays the merchant of record. Pay with Shop Pay.</p>
+          <div className="how-co">
+            <b>How checkout works</b>
+            <span>Your room is one cart, but you check out with each shop separately: {groups.size} handoff{groups.size === 1 ? '' : 's'}, one per shop. Each shop confirms its own shipping, taxes and stock, and stays the merchant of record.</span>
+            <span className="sim-label">Simulated in this demo · sample shops · nothing is charged</span>
+          </div>
+          <button className="btn btn-green big" disabled={room.pieces === 0} onClick={() => actions.checkout()}>Continue to {groups.size} shop checkouts →</button>
         </div>
       </aside>
     </div>
@@ -135,7 +139,7 @@ export function Checkout() {
                 <div className="co-shop">{c.merchant}</div>
                 <div className="co-items">{items.map((p) => <ProductThumb key={p.id} p={p} size={44} bg="#fff" />)}</div>
                 <div className="muted small">{items.map((p) => p.title).join(' · ')}</div>
-                <div className="co-total">{money(c.total.amount)}</div>
+                <div className="co-total">{money(c.total.amount)} <span className="muted small">items · + shipping & tax at this shop's checkout</span></div>
                 <button className="btn btn-green" onClick={() => setOpened(c.continueUrl)}>Continue to {c.merchant} checkout (simulated) →</button>
               </div>
             );
