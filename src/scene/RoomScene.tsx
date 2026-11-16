@@ -32,7 +32,18 @@ interface Props {
   onMove?: (s: Slot, xCm: number) => void;
   className?: string;
   title?: string;
+  quickSwap?: { label: string; index: number; count: number; onPrev: () => void; onNext: () => void; onMore: () => void };
 }
+
+const NOUN: Record<Slot, string> = { rug: 'rug', chair: 'chair', lamp: 'lamp', 'side-table': 'side table', shelf: 'shelf', 'wall-art': 'art' };
+const GHOST: Record<Slot, { x: number; w: number; h: number; wall?: boolean }> = {
+  shelf: { x: 4, w: 70, h: 120 },
+  'side-table': { x: 108, w: 42, h: 50 },
+  lamp: { x: 366, w: 36, h: 150 },
+  chair: { x: 400, w: 72, h: 80 },
+  'wall-art': { x: 225, w: 70, h: 80, wall: true },
+  rug: { x: 160, w: 200, h: 30 },
+};
 
 function dimsFor(p: Product) {
   return p.dimensions.source === 'missing' ? { ...PLACEHOLDER[p.slot], originalUnit: 'cm' as const } : normalize(p.dimensions);
@@ -100,9 +111,25 @@ export function RoomScene(props: Props) {
         </g>
       )}
 
-      <OwnedCouch vibe={vibe} />
+      {interactive && SLOTS.filter((sl) => !products[sl]).map((sl) => <Ghost key={`ghost-${sl}`} slot={sl} selected={selectedSlot === sl} onSelect={() => onSelect?.(sl)} />)}
 
-      {order.map((slot, i) => {
+      {renderItems(['lamp'])}
+      <OwnedCouch vibe={vibe} />
+      {renderItems(order.filter((o) => o !== 'lamp'))}
+
+      <CoffeeTable vibe={vibe} />
+
+      {showMeasurements && <Measurements products={products} positions={positions} unit={unit} />}
+
+      {interactive && props.quickSwap && selectedSlot && products[selectedSlot] && <QuickSwap box={selectedSlot === 'rug' ? { x: X(positions.rug ?? 0), y: 560, w: dimsFor(products.rug!).width * PX, h: 120 } : itemBox(products[selectedSlot]!, positions[selectedSlot] ?? 0)} slot={selectedSlot} q={props.quickSwap} />}
+
+      <rect x={0} y={0} width={VIEW.w} height={VIEW.h} fill={`url(#${uid}-vignette)`} pointerEvents="none" />
+    </svg>
+  );
+
+  function renderItems(slots: Slot[]) {
+    return slots.map((slot) => {
+        const i = order.indexOf(slot);
         const p = products[slot];
         if (!p) return null;
         const box = itemBox(p, positions[slot] ?? 0);
@@ -166,14 +193,43 @@ export function RoomScene(props: Props) {
             {sel && r && <VerdictTag x={box.x + box.w / 2} y={box.y - 16} r={r} />}
           </g>
         );
-      })}
+      });
+  }
+}
 
-      <CoffeeTable vibe={vibe} />
+function Ghost({ slot, selected, onSelect }: { slot: Slot; selected: boolean; onSelect: () => void }) {
+  const g = GHOST[slot];
+  const x = X(g.x), w = g.w * PX;
+  const h = slot === 'rug' ? 70 : g.h * PX;
+  const y = slot === 'rug' ? 600 : g.wall ? FLOOR_Y - ROOM.artBottom * PX - h : BASE_Y - h;
+  return (
+    <g className="ghost" role="button" tabIndex={0} aria-label={`Add a ${NOUN[slot]}`} onPointerDown={(e) => { e.stopPropagation(); onSelect(); }} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelect()}>
+      <rect x={x} y={y} width={w} height={h} rx={12} fill={selected ? 'rgba(90,49,244,0.14)' : 'rgba(255,255,255,0.35)'} stroke="#5A31F4" strokeWidth={2} strokeDasharray="7 6" />
+      <circle cx={x + w / 2} cy={y + h / 2 - 8} r={14} fill="#5A31F4" />
+      <text x={x + w / 2} y={y + h / 2 - 2} textAnchor="middle" fontSize={20} fontWeight={800} fill="#fff" fontFamily="Inter, system-ui, sans-serif">+</text>
+      <text x={x + w / 2} y={y + h / 2 + 22} textAnchor="middle" fontSize={12} fontWeight={800} fill="#5A31F4" fontFamily="Inter, system-ui, sans-serif">Add {NOUN[slot]}</text>
+    </g>
+  );
+}
 
-      {showMeasurements && <Measurements products={products} positions={positions} unit={unit} />}
-
-      <rect x={0} y={0} width={VIEW.w} height={VIEW.h} fill={`url(#${uid}-vignette)`} pointerEvents="none" />
-    </svg>
+function QuickSwap({ box, slot, q }: { box: { x: number; y: number; w: number; h: number }; slot: Slot; q: NonNullable<Props['quickSwap']> }) {
+  const W = 290, H = 60;
+  let x = box.x + box.w / 2 - W / 2;
+  x = Math.max(8, Math.min(VIEW.w - W - 8, x));
+  const below = slot === 'wall-art' || slot === 'shelf' ? box.y + box.h + 14 : Math.min(VIEW.h - H - 8, BASE_Y + 14);
+  const y = slot === 'rug' ? VIEW.h - H - 10 : below;
+  const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
+  return (
+    <foreignObject x={x} y={y} width={W} height={H} onPointerDown={stop} onClick={stop}>
+      <div className="qswap">
+        <button onClick={q.onPrev} aria-label={`Previous ${NOUN[slot]}`}>‹</button>
+        <button className="qswap-mid" onClick={q.onMore} aria-label={`See all ${NOUN[slot]} options`}>
+          <b>Swap {NOUN[slot]}</b>
+          <span>{q.index + 1} of {q.count} · see all</span>
+        </button>
+        <button onClick={q.onNext} aria-label={`Next ${NOUN[slot]}`}>›</button>
+      </div>
+    </foreignObject>
   );
 }
 
@@ -535,7 +591,7 @@ function Measurements({ products, positions, unit }: { products: Partial<Record<
         )}
       </g>,
     );
-    if (box.lane === 'floor') floor.push({ x: positions[slot] ?? 0, w: d.width, label: slot });
+    if (box.lane === 'floor' && slot !== 'lamp') floor.push({ x: positions[slot] ?? 0, w: d.width, label: slot });
   });
   // free gaps along the floor
   const sorted = floor.sort((a, b) => a.x - b.x);

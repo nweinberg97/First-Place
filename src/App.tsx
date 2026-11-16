@@ -1,8 +1,8 @@
 import { actions, useApp } from './store';
-import { deriveRoom } from './derive';
+import { deriveRoom, rankedCandidates } from './derive';
 import { vibeById } from './data/vibes';
 import { RoomScene } from './scene/RoomScene';
-import { BudgetDock, LeftRail, TopBar, VibeBar, StageTools } from './components/Panels';
+import { BudgetDock, PlacePanel, TopBar, VibeBar, StageTools, LeftRail } from './components/Panels';
 import { FitReceipt } from './components/FitReceipt';
 import { Discover } from './components/Discover';
 import { ARPreview, CartDrawer, Checkout, PhotoCalibration, SharePreview, Toast, UnderTheHood } from './components/Overlays';
@@ -11,6 +11,22 @@ export default function App() {
   const s = useApp();
   const room = deriveRoom(s);
   const vibe = vibeById(s.vibe);
+  const sel = s.selectedSlot;
+  const ranked = sel && room.products[sel] ? rankedCandidates(sel, s) : [];
+  const ids = ranked.map((c) => c.p.id);
+  const quickSwap = sel && room.products[sel]
+    ? {
+        label: sel,
+        index: Math.max(0, ids.indexOf(room.products[sel]!.id)),
+        count: ids.length,
+        onPrev: () => actions.step(sel, ids, -1),
+        onNext: () => actions.step(sel, ids, 1),
+        onMore: () => {
+          actions.set({ pulse: s.pulse + 1 });
+          setTimeout(() => (document.querySelector('#discover input') as HTMLInputElement | null)?.focus({ preventScroll: true }), 50);
+        },
+      }
+    : undefined;
   return (
     <div className={`app vibe-${vibe.id}`}>
       <TopBar />
@@ -34,16 +50,12 @@ export default function App() {
               swapKey={s.swapKey}
               onSelect={(sl) => actions.selectSlot(sl)}
               onMove={(sl, x) => actions.move(sl, x)}
+              quickSwap={quickSwap}
               className="room"
               title={`${vibe.name} studio with ${room.pieces} pieces from ${room.shops} shops`}
             />
             <div className="stage-badges">
-              <span className="badge">✏️ Illustrated to scale</span>
-              <span className="badge">drag pieces · tap for the Fit Receipt</span>
-            </div>
-            <div className="stage-vibe">
-              <b>{vibe.emoji} {vibe.name}</b>
-              <span>{vibe.tagline}</span>
+              <span className="badge sample">Sample studio · a preview, not your apartment · drawn to scale</span>
             </div>
             <StageTools />
             <Toast />
@@ -66,6 +78,7 @@ export default function App() {
       {s.panel === 'ar' && <ARPreview />}
       {s.panel === 'share' && <SharePreview />}
       {s.panel === 'photo' && <PhotoCalibration />}
+      {s.panel === 'place' && <PlacePanel />}
     </div>
   );
 }

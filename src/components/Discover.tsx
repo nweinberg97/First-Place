@@ -4,12 +4,11 @@ import { SLOTS } from '../types';
 import { actions, catalog, useApp } from '../store';
 import { PRODUCTS } from '../data/products';
 import { vibeById } from '../data/vibes';
-import { candidateReceipt, deriveRoom } from '../derive';
+import { deriveRoom, rankedCandidates } from '../derive';
 import { ProductThumb, VerdictPill } from './Bits';
 import { money } from '../hooks';
 
 const SLOT_TAB: Record<Slot, string> = { rug: 'Rugs', chair: 'Chairs', lamp: 'Lamps', 'side-table': 'Side tables', shelf: 'Shelves', 'wall-art': 'Art' };
-const RANK: Record<string, number> = { Fits: 0, 'Probably fits': 1, Squeeze: 2, "Can't tell": 3, "Won't fit": 4 };
 
 export function Discover() {
   const s = useApp();
@@ -18,9 +17,7 @@ export function Discover() {
   const current = room.products[slot];
   const debounce = useRef<number | undefined>(undefined);
   const list = useRef<HTMLUListElement>(null);
-  useEffect(() => {
-    list.current?.scrollTo({ left: 0, behavior: 'smooth' });
-  }, [slot, s.vibe, current?.id]);
+
 
   // Real discovery call (simulated data) when the shopper searches.
   useEffect(() => {
@@ -34,23 +31,22 @@ export function Discover() {
 
   const results = useMemo(() => {
     const q = s.query.trim().toLowerCase();
-    return PRODUCTS.filter((p) => p.slot === slot)
-      .filter((p) => !q || `${p.title} ${p.merchant.name} ${p.styleTags.join(' ')} ${vibeById(p.vibe).name}`.toLowerCase().includes(q))
-      .map((p) => {
-        const view = candidateReceipt(slot, p.id, s);
-        return { p, view, r: view.receipts[slot]!, delta: view.total - room.total, inRoom: current?.id === p.id };
-      })
-      .sort((a, b) => Number(b.inRoom) - Number(a.inRoom) || Number(b.p.vibe === s.vibe) - Number(a.p.vibe === s.vibe) || RANK[a.r.overall] - RANK[b.r.overall] || a.p.price.amount - b.p.price.amount);
-  }, [s, slot, room.total, current?.id]);
+    return rankedCandidates(slot, s).filter(({ p }) => !q || `${p.title} ${p.merchant.name} ${p.styleTags.join(' ')} ${vibeById(p.vibe).name}`.toLowerCase().includes(q));
+  }, [s, slot]);
+
+  useEffect(() => {
+    const el = list.current?.querySelector('.in-room');
+    el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }, [current?.id, slot]);
 
   const shops = new Set(results.map((x) => x.p.merchant.name)).size;
 
   return (
-    <section className="discover" aria-label="Discover swaps">
+    <section key={s.pulse} className={`discover ${s.selectedSlot ? 'live' : ''}`} id="discover" aria-label="Discover swaps">
       <div className="disc-bar">
         <div className="disc-title">
           <span className="eyebrow">Discover</span>
-          <b>Swap the {SLOT_TAB[slot].toLowerCase().replace(/s$/, '')}</b>
+          <b>{current ? <>Swap your {SLOT_TAB[slot].toLowerCase().replace(/s$/, '')}</> : <>Add a {SLOT_TAB[slot].toLowerCase().replace(/s$/, '')}</>}</b>
           <span className="disc-count">{results.length} from {shops} shops</span>
         </div>
         <div className="slot-tabs" role="tablist">

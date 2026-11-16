@@ -41,13 +41,18 @@ export function scoreSpace(target: PlacedItem, staged: PlacedItem[]): SpaceScore
   if (lane === 'rug') {
     const spare = Math.min(ROOM.rugZone.w - d.width, ROOM.rugZone.d - d.depth);
     const verdict: SpaceVerdict = spare < 0 ? 'wont-fit' : spare <= TIGHT_CM ? 'tight' : 'fits';
-    return { verdict, estimated, spareCm: spare, spanCm: ROOM.rugZone.w, overlapsWith: null, note: `Clear floor in front of the couch is ${ROOM.rugZone.w} × ${ROOM.rugZone.d} cm.` };
+    const note = spare < 0
+      ? `Needs ${Math.round(d.width)} × ${Math.round(d.depth)} cm of floor. The clear floor in front of the couch is ${ROOM.rugZone.w} × ${ROOM.rugZone.d} cm.`
+      : `Clear floor in front of the couch is ${ROOM.rugZone.w} × ${ROOM.rugZone.d} cm. ${Math.round(spare)} cm to spare.`;
+    return { verdict, estimated, spareCm: spare, spanCm: ROOM.rugZone.w, overlapsWith: null, note };
   }
 
+  // Floor lamps have a small base and tuck beside or behind furniture, so they don't block (or get blocked by) other pieces.
+  const isLamp = target.product.slot === 'lamp';
   const others: Interval[] = [
-    ...fixedObstacles(lane),
+    ...(isLamp ? [] : fixedObstacles(lane)),
     ...staged
-      .filter((s) => s.product.id !== target.product.id && laneOf(s.product) === lane)
+      .filter((s) => !isLamp && s.product.id !== target.product.id && laneOf(s.product) === lane && s.product.slot !== 'lamp')
       .map((s) => {
         const sd = scoringDims(s.product) ?? normalize(s.product.dimensions);
         return { id: s.product.id, label: `the ${s.product.title}`, x: s.x, w: sd.width || 60 };
@@ -58,16 +63,18 @@ export function scoreSpace(target: PlacedItem, staged: PlacedItem[]): SpaceScore
   let note: string;
   if (r.spare < 0) {
     verdict = 'wont-fit';
-    note = `Needs ${Math.round(d.width)} cm but this gap is ${Math.round(r.span)} cm.`;
+    note = `Needs ${Math.round(d.width)} cm of wall, but the biggest open gap here is ${Math.round(r.span)} cm.`;
   } else if (r.overlapsWith) {
     verdict = 'wont-fit';
-    note = `It overlaps ${r.overlapsWith}. Drag it into the free gap.`;
+    note = `It's overlapping ${r.overlapsWith} where it sits now. Drag it into the open gap; it fits there.`;
   } else if (r.spare <= TIGHT_CM) {
     verdict = 'tight';
     note = `Fits with only ${Math.round(r.spare)} cm to spare.`;
   } else {
     verdict = 'fits';
-    note = `${Math.round(r.spare)} cm to spare in a ${Math.round(r.span)} cm gap.`;
+    note = isLamp
+      ? `Small ${Math.round(d.width)} cm base, so it tucks beside the couch arm.`
+      : `${Math.round(r.spare)} cm to spare in a ${Math.round(r.span)} cm gap.`;
   }
   return { verdict, estimated, spareCm: r.spare, spanCm: r.span, overlapsWith: r.overlapsWith, note };
 }

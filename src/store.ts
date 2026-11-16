@@ -9,7 +9,7 @@ import { MockCatalogClient } from './catalog/MockCatalogClient';
 import { MockUcpClient } from './catalog/MockUcpClient';
 import type { CartLine, MerchantCheckout } from './catalog/types';
 
-export type Panel = 'cart' | 'checkout' | 'ar' | 'share' | 'hood' | 'photo' | null;
+export type Panel = 'cart' | 'checkout' | 'ar' | 'share' | 'hood' | 'photo' | 'place' | null;
 
 export interface State {
   vibe: VibeId;
@@ -34,6 +34,7 @@ export interface State {
   swapKey: Record<Slot, number>;
   cartId: string | null;
   checkouts: MerchantCheckout[];
+  pulse: number;
 }
 
 // ── tiny external store (zustand-style, zero deps) ──────────────────
@@ -136,7 +137,7 @@ export const actions = {
   },
 
   selectSlot(slot: Slot | null) {
-    set({ selectedSlot: slot, query: '' });
+    set((st) => ({ selectedSlot: slot, query: '', pulse: slot && slot !== st.selectedSlot ? st.pulse + 1 : st.pulse }));
     const id = slot ? get().selection[slot] : null;
     if (id) catalog.getProduct(id);
   },
@@ -169,6 +170,21 @@ export const actions = {
     set({ selection, positions: defaultPositions(products), roll: s.roll + 1 });
     toast('🎲 Remixed. Same vibe, different pieces.');
     syncCart();
+  },
+
+  buildOwn() {
+    const s = get();
+    set({ selection: { rug: null, chair: null, lamp: null, 'side-table': null, shelf: null, 'wall-art': null }, selectedSlot: 'chair', roll: s.roll + 1, pulse: s.pulse + 1, query: '' });
+    toast('🎨 Blank canvas. Tap a + and pick from any shop, any vibe.');
+    syncCart();
+  },
+
+  /** Flip to the previous/next candidate in the ranked list. */
+  step(slot: Slot, ids: string[], dir: 1 | -1) {
+    const cur = get().selection[slot];
+    const i = cur ? ids.indexOf(cur) : -1;
+    const next = ids[(i + dir + ids.length) % ids.length];
+    if (next) actions.swap(slot, next);
   },
 
   move(slot: Slot, x: number) {
@@ -239,6 +255,7 @@ state = {
   swapKey: {} as Record<Slot, number>,
   cartId: null,
   checkouts: [],
+  pulse: 0,
 };
 // Seed the protocol log with the initial discovery calls.
 actions.setVibe('modern', true);

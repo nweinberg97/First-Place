@@ -1,5 +1,5 @@
 import { actions, useApp } from '../store';
-import { deriveRoom, previewVibe } from '../derive';
+import { deriveRoom, isMix, previewVibe } from '../derive';
 import { VIBES, vibeById } from '../data/vibes';
 import { money, useCountUp } from '../hooks';
 import { Logo } from './Bits';
@@ -35,10 +35,12 @@ export function TopBar() {
   );
 }
 
-export function LeftRail() {
+export function PlacePanel() {
   const s = useApp();
   return (
-    <aside className="left-rail" aria-label="Your place">
+    <div className="scrim" onClick={() => actions.set({ panel: null })}>
+    <aside className="place-panel" role="dialog" aria-modal="true" aria-label="Your place" onClick={(e) => e.stopPropagation()}>
+      <div className="place-head"><h2>Your place</h2><button className="x static" onClick={() => actions.set({ panel: null })} aria-label="Close">✕</button></div>
       <section className="card">
         <div className="eyebrow">Your place</div>
         <div className="studio">
@@ -88,6 +90,47 @@ export function LeftRail() {
           </div>
         </div>
       </section>
+      <button className="btn btn-green big" onClick={() => actions.set({ panel: null })}>Done</button>
+    </aside>
+    </div>
+  );
+}
+
+export function LeftRail() {
+  const s = useApp();
+  return (
+    <aside className="left-rail" aria-label="Your place">
+      <section className="card">
+        <div className="eyebrow">What's staying</div>
+        <div className="staying">
+          <span className="chip chip-own"><i style={{ background: '#8E9196' }} /> Grey couch</span>
+          <span className="chip chip-own"><i style={{ background: '#C49A6C' }} /> Oak coffee table</span>
+        </div>
+        <p className="quip">Your couch stays. Everything else is up for grabs.</p>
+      </section>
+      <section className="card">
+        <div className="eyebrow">Your constraints</div>
+        <label className="field"><span>Budget</span><b>{money(s.budget)}</b></label>
+        <input type="range" min={500} max={2000} step={50} value={s.budget} onChange={(e) => actions.set({ budget: +e.target.value })} aria-label="Budget" />
+        <label className="field">
+          <span>Front door width</span>
+          <span className="num">
+            <input type="number" min={60} max={120} value={s.unit === 'in' ? Math.round(s.doorWidth / 2.54) : s.doorWidth} onChange={(e) => actions.set({ doorWidth: s.unit === 'in' ? +e.target.value * 2.54 : +e.target.value })} aria-label="Door width" />
+            {s.unit}
+          </span>
+        </label>
+        <Toggle label="No drilling (renter)" on={s.noDrilling} onChange={(v) => actions.set({ noDrilling: v })} />
+        <Toggle label="Walk-up, no elevator" on={s.walkUp} onChange={(v) => actions.set({ walkUp: v })} />
+        <div className="field">
+          <span>Units</span>
+          <div className="seg" role="group" aria-label="Units">
+            {(['cm', 'in'] as const).map((u) => (
+              <button key={u} className={s.unit === u ? 'on' : ''} onClick={() => actions.set({ unit: u })} aria-pressed={s.unit === u}>{u}</button>
+            ))}
+          </div>
+        </div>
+      </section>
+      <button className="link" onClick={() => actions.set({ panel: 'photo' })}>📷 Try your own photo <span className="beta">beta</span></button>
     </aside>
   );
 }
@@ -104,18 +147,19 @@ function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange:
 export function VibeBar() {
   const s = useApp();
   const views = Object.fromEntries(VIBES.map((v) => [v.id, previewVibe(v.id, s)]));
+  const mix = isMix(s);
+  const room = deriveRoom(s);
   return (
     <div className="vibe-bar">
       <div className="stickers" role="radiogroup" aria-label="Pick a vibe">
-        <span className="vibe-check">vibe check →</span>
         {VIBES.map((v) => (
           <button
             key={v.id}
             role="radio"
-            aria-checked={s.vibe === v.id}
-            className={`sticker ${s.vibe === v.id ? 'on' : ''}`}
+            aria-checked={!mix && s.vibe === v.id}
+            className={`sticker ${!mix && s.vibe === v.id ? 'on' : ''}`}
             style={{ background: v.sticker.bg, color: v.sticker.fg, ['--rot' as string]: `${v.sticker.rotate}deg` }}
-            onClick={() => s.vibe !== v.id && actions.setVibe(v.id)}
+            onClick={() => (mix || s.vibe !== v.id) && actions.setVibe(v.id)}
           >
             <span className="emo">{v.emoji}</span>
             <span className="st-text">
@@ -124,6 +168,13 @@ export function VibeBar() {
             </span>
           </button>
         ))}
+        <button role="radio" aria-checked={mix} className={`sticker own ${mix ? 'on' : ''}`} onClick={() => actions.buildOwn()} title="Start from a blank room and pick every piece yourself">
+          <span className="emo">🎨</span>
+          <span className="st-text">
+            <span className="st-name">{mix ? 'My mix' : 'Build my own'}</span>
+            <span className="st-total">{mix ? `${money(room.total)} · ${room.pieces}/6` : 'start blank'}</span>
+          </span>
+        </button>
       </div>
     </div>
   );

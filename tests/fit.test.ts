@@ -25,29 +25,32 @@ describe('units', () => {
 });
 
 describe('space fit', () => {
-  // Lamp at 366–402; right wall at 480 → a 78 cm gap for the chair.
-  const lampAt: PlacedItem = { product: lamp, x: 366 };
+  // A bookcase at 4–84 cm and the couch from 160 cm leave a 76 cm gap for a side table.
+  const bookcase: PlacedItem = { product: byTitle('Glass Front Bookcase'), x: 4 };
+  const table = (w: number) => withDims(byTitle('Plinth Side Table'), { width: w, depth: 40, height: 50, unit: 'cm', source: 'stated' });
   it('fits with room to spare', () => {
-    const c = chair(68);
-    expect(scoreSpace({ product: c, x: 476 - 68 }, [lampAt]).verdict).toBe('fits');
+    expect(scoreSpace({ product: table(60), x: 92 }, [bookcase]).verdict).toBe('fits');
   });
   it('is tight with 5 cm or less', () => {
-    const c = chair(74);
-    expect(scoreSpace({ product: c, x: 476 - 74 }, [lampAt]).verdict).toBe('tight');
+    expect(scoreSpace({ product: table(72), x: 86 }, [bookcase]).verdict).toBe('tight');
   });
   it("won't fit when wider than the gap", () => {
-    const c = chair(88);
-    expect(scoreSpace({ product: c, x: 388 }, [lampAt]).verdict).toBe('wont-fit');
+    expect(scoreSpace({ product: table(80), x: 84 }, [bookcase]).verdict).toBe('wont-fit');
   });
   it('flags overlap with the owned couch', () => {
-    const c = chair(68);
-    const r = scoreSpace({ product: c, x: 330 }, [lampAt]);
+    const r = scoreSpace({ product: table(40), x: 140 }, [bookcase]);
     expect(r.verdict).toBe('wont-fit');
     expect(r.overlapsWith).toBe('your couch');
   });
   it('flags overlap with another staged product', () => {
-    const r = freeSpan({ id: 'a', label: 'a', x: 380, w: 60 }, [{ id: 'b', label: 'the lamp', x: 366, w: 36 }]);
-    expect(r.overlapsWith).toBe('the lamp');
+    const r = freeSpan({ id: 'a', label: 'a', x: 380, w: 60 }, [{ id: 'b', label: 'the chair', x: 366, w: 36 }]);
+    expect(r.overlapsWith).toBe('the chair');
+  });
+  it('floor lamps tuck beside the couch without blocking anything', () => {
+    expect(scoreSpace({ product: byTitle('Arc Reading Lamp'), x: 346 }, [bookcase]).verdict).toBe('fits');
+  });
+  it('a rug too deep for the clear floor will not fit', () => {
+    expect(scoreSpace({ product: byTitle('Heirloom Medallion Rug'), x: 0 }, []).verdict).toBe('wont-fit');
   });
 });
 

@@ -1,6 +1,7 @@
 import type { Product, Slot, VibeId } from './types';
 import { SLOTS } from './types';
 import { vibeById } from './data/vibes';
+import { PRODUCTS } from './data/products';
 import { buildReceipt, budgetStatus, roomTotal, type PlacedItem, type Receipt } from './fit/score';
 import { defaultPositions } from './fit/layout';
 import { effective, vibeSet, type State } from './store';
@@ -82,4 +83,26 @@ export function candidateReceipt(slot: Slot, productId: string, s: State) {
   SLOTS.forEach((sl) => (products[sl] = effective(selection[sl], s.answered)));
   const positions = { ...s.positions, [slot]: defaultPositions(products)[slot] };
   return computeRoom(selection, positions, s.qty, s);
+}
+
+const RANK: Record<string, number> = { Fits: 0, 'Probably fits': 1, Squeeze: 2, "Can't tell": 3, "Won't fit": 4 };
+
+/** Stable, best-fit-first list of everything that could go in a slot (used by Discover and quick swap). */
+export function rankedCandidates(slot: Slot, s: State) {
+  const room = deriveRoom(s);
+  const current = room.products[slot];
+  return PRODUCTS.filter((p) => p.slot === slot)
+    .map((p) => {
+      const view = candidateReceipt(slot, p.id, s);
+      return { p, r: view.receipts[slot]!, delta: view.total - room.total, inRoom: current?.id === p.id };
+    })
+    .sort((a, b) => Number(b.p.vibe === s.vibe) - Number(a.p.vibe === s.vibe) || RANK[a.r.overall] - RANK[b.r.overall] || a.p.price.amount - b.p.price.amount || a.p.title.localeCompare(b.p.title));
+}
+
+/** True when the room no longer matches one preset vibe: the shopper is building their own. */
+export function isMix(s: State) {
+  const ids = Object.values(s.selection);
+  if (ids.some((id) => !id)) return true;
+  const vibes = new Set(ids.map((id) => PRODUCTS.find((p) => p.id === id)?.vibe));
+  return vibes.size > 1 || !vibes.has(s.vibe);
 }

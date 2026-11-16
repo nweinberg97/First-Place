@@ -170,37 +170,63 @@ export function ARPreview() {
   const slot = s.selectedSlot ?? 'chair';
   const p = room.products[slot];
   const r = room.receipts[slot];
-  const [placed, setPlaced] = useState(false);
+  const [phase, setPhase] = useState<'scan' | 'ready' | 'placed'>('scan');
+  useEffect(() => {
+    if (phase !== 'scan') return;
+    const t = setTimeout(() => setPhase('ready'), 1700);
+    return () => clearTimeout(t);
+  }, [phase]);
   if (!p || !r) return <Modal label="AR preview"><p>Pick something in the room first.</p></Modal>;
   const box = slot === 'rug' ? { x: 200, y: 560, w: 640, h: 110 } : itemBox(p, s.positions[slot] ?? 0);
-  const pad = 140;
-  const vx = Math.max(0, box.x + box.w / 2 - 230), vy = Math.max(0, Math.min(VIEW.h - 620, box.y - pad));
+  const vx = Math.max(0, Math.min(VIEW.w - 460, box.x + box.w / 2 - 230)), vy = Math.max(0, Math.min(VIEW.h - 620, box.y - 140));
   const n = p.dimensions.source === 'missing' ? PLACEHOLDER[p.slot] : normalize(p.dimensions);
-  const status = r.overall === 'Fits' || r.overall === 'Probably fits' ? `${r.overall} · ${Math.round(Math.max(0, r.space.spareCm ?? 0))} cm to spare` : r.overall;
+  const pct = { left: `${((box.x - vx - 10) / 460) * 100}%`, top: `${((box.y - vy - 10) / 620) * 100}%`, width: `${((box.w + 20) / 460) * 100}%`, height: `${((box.h + 20) / 620) * 100}%` };
+  const shown = phase === 'placed' ? room.products : { ...room.products, [slot]: undefined };
+  const good = r.overall === 'Fits' || r.overall === 'Probably fits';
+  const status = good ? `${r.overall} · ${Math.round(Math.max(0, r.space.spareCm ?? 0))} cm to spare` : r.overall;
+  const steps = [
+    ['Scan your floor', 'Move your phone slowly so it can find the floor.'],
+    ['Tap to place', `Drop the ${p.title.toLowerCase()} on the spot you picked.`],
+    ['Check the fit', 'See its real size and whether it fits, then walk around it.'],
+  ];
+  const idx = phase === 'scan' ? 0 : phase === 'ready' ? 1 : 2;
   return (
     <Modal label="AR preview" className="ar-modal">
       <div className="ar-wrap">
         <div className="phone">
           <div className="notch" />
           <div className="phone-screen">
-            <RoomScene uid="ar" vibe={vibeById(s.vibe)} products={room.products} positions={s.positions} viewBox={`${vx} ${vy} 460 620`} className="ar-scene" />
+            <RoomScene uid="ar" vibe={vibeById(s.vibe)} products={shown} positions={s.positions} viewBox={`${vx} ${vy} 460 620`} className="ar-scene" />
             <div className="grain" />
-            <div className="brackets" style={{ left: `${((box.x - vx - 10) / 460) * 100}%`, top: `${((box.y - vy - 10) / 620) * 100}%`, width: `${((box.w + 20) / 460) * 100}%`, height: `${((box.h + 20) / 620) * 100}%` }}>
-              <i /><i /><i /><i />
-              <span className="ar-dim w">{fmtLen(n.width, s.unit)}</span>
-              {slot !== 'rug' && <span className="ar-dim h">{fmtLen(n.height, s.unit)}</span>}
-            </div>
-            <div className={`ar-status ${r.overall === "Won't fit" ? 'bad' : ''}`}>{status}</div>
-            <button className={`shutter ${placed ? 'done' : ''}`} onClick={() => setPlaced(true)} aria-label="Place item">{placed ? '✓' : ''}</button>
-            {placed && <div className="placed-toast">Placed. Walk around it.</div>}
+            {phase === 'scan' && <div className="scan" />}
+            {phase === 'scan' && <div className="ar-hint">Finding the floor…<br /><span style={{ fontWeight: 500, opacity: 0.8 }}>move your phone slowly</span></div>}
+            {phase === 'ready' && <div className="ghost-target" style={pct} />}
+            {phase === 'ready' && <div className="ar-hint" style={{ top: '22%' }}>Floor found ✓<br />Tap the button to place it here</div>}
+            {phase === 'placed' && (
+              <div className="brackets" style={pct}>
+                <i /><i /><i /><i />
+                <span className="ar-dim w">{fmtLen(n.width, s.unit)}</span>
+                {slot !== 'rug' && <span className="ar-dim h">{fmtLen(n.height, s.unit)}</span>}
+              </div>
+            )}
+            {phase === 'placed' && <div className={`ar-status ${good ? '' : 'bad'}`}>{status}</div>}
+            <button className={`shutter ${phase === 'placed' ? 'done' : phase === 'ready' ? 'ready' : ''}`} disabled={phase === 'scan'} onClick={() => setPhase(phase === 'placed' ? 'scan' : 'placed')} aria-label={phase === 'placed' ? 'Place again' : 'Place item'}>{phase === 'placed' ? '↺' : ''}</button>
           </div>
         </div>
         <div className="ar-copy">
           <span className="sim-label">Preview of the AR experience</span>
-          <h2>{p.title}</h2>
-          <p className="muted">{p.merchant.name} · {money(p.price.amount)}</p>
-          <p>Point your phone at the spot and First Place drops the {p.title.toLowerCase()} in at true scale, so you can walk around it before you buy.</p>
-          <p className="muted small">Next with more time: real WebXR / AR Quick Look from merchants' 3D models in the Catalog.</p>
+          <h2>See the {p.title} in your room</h2>
+          <p className="muted">{p.merchant.name} · {money(p.price.amount)} · {fmtLen(n.width, s.unit)} wide</p>
+          <ol className="ar-steps">
+            {steps.map(([t, d], i) => (
+              <li key={t} className={i === idx ? 'on' : i < idx ? 'done' : ''}>
+                <b>{i < idx ? '✓' : i + 1}</b>
+                <span><strong>{t}</strong><br /><span className="small">{d}</span></span>
+              </li>
+            ))}
+          </ol>
+          {phase === 'placed' && <p className="small">{r.space.note} {good ? 'Looks right? Add it to your cart from the room.' : 'Try a smaller one: tap ‹ › under it in the room.'}</p>}
+          <p className="muted small">On a real phone this uses the merchant's 3D model (WebXR / AR Quick Look).</p>
         </div>
       </div>
     </Modal>

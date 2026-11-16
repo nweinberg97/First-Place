@@ -19,7 +19,7 @@ export function defaultX(slot: Slot, sel: Partial<Record<Slot, Product | undefin
     case 'side-table':
       return 150 - w;
     case 'lamp':
-      return 366;
+      return 346; // tucked at the couch arm
     case 'chair':
       return 476 - w;
     case 'wall-art':

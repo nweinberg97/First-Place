@@ -90,7 +90,7 @@ const ROWS: Row[] = [
   { vibe: 'retro', slot: 'wall-art', option: 'B', title: 'Vinyl Grid Trio', m: 9, price: 89, d: dims(120, 3, 40), variant: 'grid', colors: ['#2E7D7A', '#D9622B'], tags: ['retro', 'mid-century'], kg: 3 },
 
   // ── CLASSY ──────────────────────────────────────────────
-  { vibe: 'classy', slot: 'rug', option: 'A', title: 'Heirloom Medallion Rug', m: 8, price: 349, d: dims(240, 170, 1.5), variant: 'persian', colors: ['#7A2E2E', '#C8A15A'], tags: ['traditional', 'classic', 'elegant'], kg: 14, fold: true },
+  { vibe: 'classy', slot: 'rug', option: 'A', title: 'Heirloom Medallion Rug', m: 8, price: 349, d: dims(120, 96, 0.6, 'in'), variant: 'persian', colors: ['#7A2E2E', '#C8A15A'], tags: ['traditional', 'classic', 'elegant'], kg: 14, fold: true },
   {
     vibe: 'classy', slot: 'rug', option: 'B', title: 'Ivory Border Wool Rug', m: 6, price: 279, d: MISSING, variant: 'solid', colors: ['#EFE7DA', '#2F4A3E'], tags: ['classic', 'elegant'], kg: 12, fold: true,
     ask: { answer: '230 × 160 cm, 1.2 cm pile. It ships rolled.', dimensions: dims(230, 160, 1.2) },

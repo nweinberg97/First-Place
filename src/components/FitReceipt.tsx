@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { actions, useApp } from '../store';
 import { deriveRoom } from '../derive';
 import { fmtDims, normalize } from '../fit/units';
@@ -17,6 +18,7 @@ const STAMP: Record<string, { text: string; cls: string }> = {
 
 export function FitReceipt() {
   const s = useApp();
+  const [open, setOpen] = useState(false);
   const room = deriveRoom(s);
   const slot = s.selectedSlot;
   const p = slot ? room.products[slot] : undefined;
@@ -61,7 +63,16 @@ export function FitReceipt() {
       </div>
 
       <div className="dots" />
-      <ul className="r-lines">
+      {!open && (
+        <div className="r-compact">
+          <span className={`pill pill-sm ${r.space.verdict === 'fits' ? (r.space.estimated ? 'v-est' : 'v-good') : r.space.verdict === 'wont-fit' ? 'v-bad' : r.space.verdict === 'tight' ? 'v-warn' : 'v-est'}`}>Space · {spaceText.toLowerCase()}</span>
+          <span className={`pill pill-sm ${r.door.verdict === 'gets-through' ? 'v-good' : r.door.verdict === 'wont-get-through' ? 'v-bad' : r.door.verdict === 'tight' ? 'v-warn' : 'v-est'}`}>Door · {doorText.toLowerCase()}</span>
+          <span className={`pill pill-sm ${r.compat.verdict === 'matches' ? 'v-good' : r.compat.verdict === 'clashes' ? 'v-bad' : 'v-warn'}`}>Vibe · {compatText.toLowerCase()}</span>
+          {r.renter.filter((f) => f.tone !== 'good').map((f) => <span key={f.label} className={`pill pill-sm ${f.tone === 'bad' ? 'v-bad' : 'v-warn'}`}>{f.label}</span>)}
+          <small className="r-why">{r.overall === "Won't fit" ? (r.door.verdict === 'wont-get-through' ? r.door.note : r.space.note) : r.space.note}</small>
+        </div>
+      )}
+      {open && <ul className="r-lines">
         <li className={lineCls(r.space.verdict === 'fits', r.space.verdict === 'wont-fit')}>
           <span>01 SPACE</span><i /><b>{r.space.estimated && r.space.verdict !== 'wont-fit' ? 'PROBABLY ' : ''}{spaceText}</b>
           <small>{r.space.note}{r.space.estimated ? ' Based on an estimated size.' : ''}</small>
@@ -84,7 +95,8 @@ export function FitReceipt() {
             {r.renter.map((f) => <span key={f.label} className={`chip chip-${f.tone}`}>{f.tone === 'bad' ? '✕' : f.tone === 'warn' ? '!' : '✓'} {f.label}</span>)}
           </div>
         </li>
-      </ul>
+      </ul>}
+      <button className="r-toggle" onClick={() => setOpen(!open)} aria-expanded={open}>{open ? 'Hide full receipt ▴' : 'Full receipt ▾'}</button>
 
       {p.dimensions.source === 'missing' || asking ? (
         <div className="ask">
@@ -104,10 +116,13 @@ export function FitReceipt() {
       ) : null}
 
       <div className="receipt-foot">
-        <div key={`${p.id}-${r.overall}-${answered ? 1 : 0}`} className={`stamp ${stamp.cls}`}>{stamp.text}</div>
+        <div className="stamp-wrap">
+          <div key={`${p.id}-${r.overall}-${answered ? 1 : 0}`} className={`stamp ${stamp.cls}`}>{stamp.text}</div>
+          <span className="r-sample">in the sample studio</span>
+        </div>
         <div className="r-actions">
-          <button className="btn btn-ghost" onClick={() => actions.set({ panel: 'ar' })}>📱 View in AR</button>
-          <button className="btn btn-ghost" onClick={() => actions.remove(slot)} aria-label={`Remove ${p.title} from the room`}>Remove</button>
+          <button className="btn btn-purple" onClick={() => actions.set({ panel: 'ar' })}>📱 Try it in my room</button>
+          <button className="btn btn-ghost" onClick={() => actions.remove(slot)} aria-label={`Remove ${p.title} from the room`}>✕</button>
         </div>
       </div>
       <div className="zigzag" />
