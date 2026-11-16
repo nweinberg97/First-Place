@@ -260,13 +260,14 @@ export function SharePreview() {
               <RoomScene uid="story" vibe={vibe} products={room.products} positions={s.positions} />
             </svg>
           </g>
-          <g transform="translate(80 1420)">
+          <g transform="translate(80 1395)">
             {SLOTS.filter((sl) => room.products[sl]).slice(0, 6).map((sl, i) => {
               const p = room.products[sl]!;
               return (
-                <text key={sl} x={(i % 2) * 470} y={Math.floor(i / 2) * 64} fontSize="34" fill={vibe.id === 'den' ? '#eee' : '#1A1A1A'}>
-                  {p.title.length > 22 ? p.title.slice(0, 21) + '…' : p.title} · <tspan fontWeight="800">{money(p.price.amount)}</tspan>
-                </text>
+                <g key={sl} transform={`translate(0 ${i * 47})`}>
+                  <text x="0" y="0" fontSize="32" fill={vibe.id === 'den' ? '#eee' : '#1A1A1A'}>{p.title}</text>
+                  <text x="920" y="0" fontSize="32" fontWeight="800" textAnchor="end" fill={vibe.id === 'den' ? '#eee' : '#1A1A1A'}>{money(p.price.amount)}</text>
+                </g>
               );
             })}
           </g>
@@ -277,7 +278,11 @@ export function SharePreview() {
           <h2>Flex your first place</h2>
           <p className="muted">A 9:16 story card of your actual room: total, shops and vibe. Made for IG, TikTok and the group chat.</p>
           {url ? (
-            <a className="btn btn-green big" href={url} download={`first-place-${vibe.id}.png`}>⬇ Download PNG</a>
+            <>
+              <a className="btn btn-green big" href={url} download={`first-place-${vibe.id}.png`}>⬇ Download PNG</a>
+              <img src={url} alt="Your story card" className="story-png" />
+              <p className="muted small">Download blocked? Right-click (or long-press) the image above to save it.</p>
+            </>
           ) : err ? (
             <p className="neg small">{err}</p>
           ) : (
