@@ -47,9 +47,9 @@ export function VerdictPill({ v, small }: { v: Overall; small?: boolean }) {
 }
 
 export function SourceBadge({ source }: { source: Product['dimensions']['source'] }) {
-  if (source === 'stated') return <span className="src src-stated">● Stated by merchant</span>;
-  if (source === 'inferred') return <span className="src src-inferred">◐ Estimated by Shopify</span>;
-  return <span className="src src-missing">○ Missing information</span>;
+  if (source === 'stated') return <span className="src src-stated">● Sample merchant dimensions</span>;
+  if (source === 'inferred') return <span className="src src-inferred">◐ Estimated size (sample)</span>;
+  return <span className="src src-missing">○ Dimensions unknown</span>;
 }
 
 export function Logo() {

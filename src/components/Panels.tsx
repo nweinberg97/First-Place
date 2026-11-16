@@ -25,6 +25,7 @@ export function TopBar() {
         <span>Studio · {fmtLen(ROOM.wallWidth, s.unit)} wall · {vibeById(s.vibe).emoji} {vibeById(s.vibe).name}</span>
       </div>
       <div className="top-actions">
+        <button className="demo-pill" onClick={() => actions.set({ hoodOpen: true })} title="See what's simulated">Demo · sample products & simulated commerce ⓘ</button>
         <span className="budget-pill">{money(s.budget)} budget</span>
         <button className="btn btn-ghost" onClick={() => actions.set({ panel: 'share' })}>↗ Share</button>
         <button className="btn btn-dark cart-btn" onClick={() => actions.openCart()} aria-label={`Open cart, ${room.pieces} items`}>
@@ -211,7 +212,7 @@ export function BudgetDock() {
       <div className="meter"><i style={{ width: `${pct}%` }} /></div>
       <div className="dock-stats">
         <span className={room.budget.over ? 'neg' : 'pos'}>{room.budget.label}</span>
-        <span>{room.pieces} pieces · {room.shops} indie shops</span>
+        <span>{room.pieces} pieces · {room.shops} sample shops</span>
         <span>Vibe match {room.vibeMatch}%</span>
       </div>
       <button className="btn btn-green big" onClick={() => actions.openCart()} disabled={room.pieces === 0}>Buy this room →</button>

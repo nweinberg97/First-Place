@@ -441,3 +441,7 @@ input[type='range'] { width: 100%; accent-color: var(--green); }
 .ghost-target { position: absolute; border: 2.5px dashed #fff; border-radius: 10px; animation: pulse2 1.2s ease-in-out infinite; box-shadow: 0 0 0 2000px rgba(0,0,0,0.12); }
 @keyframes pulse2 { 50% { transform: scale(1.04); } }
 .shutter.ready { animation: pulse2 1s ease-in-out infinite; background: rgba(255,255,255,0.7); }
+.demo-pill { border: 1px dashed var(--purple); background: #f6f3ff; color: var(--purple); font-weight: 800; font-size: 11.5px; border-radius: 999px; padding: 6px 12px; white-space: nowrap; }
+.r-sample { font: 800 11px Inter, sans-serif !important; color: var(--ink) !important; letter-spacing: 0.06em; background: #f0ece6; border-radius: 6px; padding: 2px 6px; }
+.use-dims { margin-top: 8px; }
+.receipt-foot { flex-wrap: wrap; } .r-actions { flex-wrap: wrap; }

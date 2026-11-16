@@ -10,6 +10,8 @@ Built as a prototype on the architecture of Shopify's **Global Catalog** (discov
 
 ## Why
 
+> Demo status: all products, shops and dimensions are sample data, and every Catalog/UCP call is simulated in the browser. Fewer returns and higher conversion are **hypotheses** this prototype is meant to explore, not results it demonstrates.
+
 - Home & furniture converts at about **1.4%** online, one of the lowest of any category, and furniture returns run about **19–20%**.
 - The top return reasons are wrong size, "looked different than expected", and confusion about scale. These are gaps in product content, not shopper mistakes.
 - Stores feel safe because you see a room already put together. Online, every product page stands alone. First Place brings the assembled room back.
@@ -20,8 +22,8 @@ Built as a prototype on the architecture of Shopify's **Global Catalog** (discov
 
 1. **Vibe check.** Flip between Modern, Retro, Classy, Den and Color Pop. Walls, floor, light and all six pieces change, and each sticker shows that vibe's room total.
 2. **Measurements.** Shows true-scale widths and the free floor between pieces.
-3. **Fit Receipt.** Tap any piece. Every verdict says where its numbers came from: *Stated by merchant*, *Estimated by Shopify*, or *Missing*. It never says "Fits" on a guessed size.
-4. **Ask the merchant.** Retro's Mod Egg Chair has no dimensions, so it says "Can't tell". A simulated `ask_business` reply fills them in and the verdict updates to Fits.
+3. **Fit Receipt.** Tap any piece. Every verdict says where its numbers came from: *Sample merchant dimensions*, *Estimated size*, or *Dimensions unknown*. It never says "Fits" on a guessed size, and every verdict is labelled "in the sample studio".
+4. **Ask the merchant.** Retro's Mod Egg Chair has no dimensions, so it says "Can't tell". A reply labelled as simulated appears first; only after you choose "Use these sample dimensions" does the verdict update.
 5. **Renter rules.** "No drilling" flags wall-mounted shelves, and Discover shows freestanding swaps. "Walk-up" flags pieces over 30 kg.
 6. **Discover.** Search and swap any slot across every shop. Each candidate is pre-scored for fit and shows what it adds to or saves from the total.
 7. **Budget dock.** Type your budget, and every swap and vibe change recalculates the total, what's left, the shop count and the vibe match.

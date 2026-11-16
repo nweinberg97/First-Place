@@ -45,7 +45,7 @@ export function CartDrawer() {
     const m = room.products[sl]!.merchant.name;
     groups.set(m, [...(groups.get(m) ?? []), sl]);
   });
-  const beforeYouBuy: string[] = [];
+  const beforeYouBuy: string[] = ['Fit was checked in the sample studio, not your apartment. Measure your space and the whole delivery route before ordering.'];
   slots.forEach((sl) => {
     const p = room.products[sl]!, r = room.receipts[sl]!;
     if (p.dimensions.source === 'inferred') beforeYouBuy.push(`${p.title}: size is estimated by Shopify, not stated by the shop.`);
@@ -61,7 +61,7 @@ export function CartDrawer() {
         <div className="drawer-head">
           <div>
             <div className="eyebrow">Your room</div>
-            <h2>{room.pieces} pieces · {groups.size} indie shops</h2>
+            <h2>{room.pieces} pieces · {groups.size} sample shops</h2>
           </div>
           <button className="x static" onClick={close} aria-label="Close cart">✕</button>
         </div>
@@ -70,7 +70,7 @@ export function CartDrawer() {
             <section key={shop} className="shop-group">
               <div className="shop-head">
                 <b>{shop}</b>
-                <span className="indie-tag">Independent shop</span>
+                <span className="indie-tag">Sample independent shop</span>
               </div>
               {sls.map((sl) => {
                 const p = room.products[sl]!;
@@ -126,7 +126,7 @@ export function Checkout() {
       <div className="co-inner">
         <span className="sim-label">Simulated checkout handoff · UCP checkout.create</span>
         <h1>Your room is ready. 🎉</h1>
-        <p className="lead">Your furniture comes from {s.checkouts.length} independent shops. Each one handles its own order and delivery.</p>
+        <p className="lead">In the real flow, your furniture would come from {s.checkouts.length} independent shops, each handling its own order and delivery. These are sample shops; nothing is ordered.</p>
         <div className="co-grid">
           {s.checkouts.map((c) => {
             const items = SLOTS.filter((sl) => room.products[sl]?.merchant.name === c.merchant).map((sl) => room.products[sl]!);
@@ -136,12 +136,12 @@ export function Checkout() {
                 <div className="co-items">{items.map((p) => <ProductThumb key={p.id} p={p} size={44} bg="#fff" />)}</div>
                 <div className="muted small">{items.map((p) => p.title).join(' · ')}</div>
                 <div className="co-total">{money(c.total.amount)}</div>
-                <button className="btn btn-green" onClick={() => setOpened(c.continueUrl)}>Continue to {c.merchant} checkout →</button>
+                <button className="btn btn-green" onClick={() => setOpened(c.continueUrl)}>Continue to {c.merchant} checkout (simulated) →</button>
               </div>
             );
           })}
         </div>
-        {opened && <p className="url-note">In the live app this opens <code>{opened}</code>, the shop's own checkout.</p>}
+        {opened && <p className="url-note">Simulated: in a live build this would open the shop's own checkout (<code>{opened}</code>). No order was placed.</p>}
         <div className="co-foot">
           <span>🛡 Each shop stays the merchant of record.</span>
           <span className="shoppay">Pay with <b>Shop</b><i>Pay</i></span>
@@ -214,8 +214,8 @@ export function ARPreview() {
           </div>
         </div>
         <div className="ar-copy">
-          <span className="sim-label">Preview of the AR experience</span>
-          <h2>See the {p.title} in your room</h2>
+          <span className="sim-label">Simulated AR · not real device AR</span>
+          <h2>Simulated AR preview: {p.title}</h2>
           <p className="muted">{p.merchant.name} · {money(p.price.amount)} · {fmtLen(n.width, s.unit)} wide</p>
           <ol className="ar-steps">
             {steps.map(([t, d], i) => (
@@ -226,7 +226,7 @@ export function ARPreview() {
             ))}
           </ol>
           {phase === 'placed' && <p className="small">{r.space.note} {good ? 'Looks right? Add it to your cart from the room.' : 'Try a smaller one: tap ‹ › under it in the room.'}</p>}
-          <p className="muted small">On a real phone this uses the merchant's 3D model (WebXR / AR Quick Look).</p>
+          <p className="muted small">This is a mock-up drawn from the sample studio, not your camera. A real version would use the merchant's 3D model (WebXR / AR Quick Look).</p>
         </div>
       </div>
     </Modal>
@@ -275,7 +275,7 @@ export function SharePreview() {
           <rect x="0" y="0" width="1080" height="560" fill={vibe.sticker.bg} />
           <text x="80" y="130" fontSize="60" fontWeight="900" fill={vibe.sticker.fg} letterSpacing="-2">my first place</text>
           <text x="80" y="310" fontSize="150" fontWeight="900" fill={vibe.sticker.fg} letterSpacing="-6">{money(room.total)}</text>
-          <text x="80" y="395" fontSize="44" fontWeight="700" fill={vibe.sticker.fg} opacity="0.85">{room.pieces} pieces from {room.shops} indie shops</text>
+          <text x="80" y="395" fontSize="44" fontWeight="700" fill={vibe.sticker.fg} opacity="0.85">{room.pieces} pieces from {room.shops} shops</text>
           <g transform="translate(700 420) rotate(-6)">
             <rect x="0" y="0" width="300" height="96" rx="20" fill="#5A31F4" />
             <text x="150" y="62" textAnchor="middle" fontSize="44" fontWeight="900" fill="#fff">{vibe.emoji} {vibe.name}</text>
@@ -298,7 +298,7 @@ export function SharePreview() {
             })}
           </g>
           <rect x="80" y="1700" width="920" height="120" rx="60" fill="#008060" />
-          <text x="540" y="1776" textAnchor="middle" fontSize="44" fontWeight="800" fill="#fff">Made with First Place on Shopify</text>
+          <text x="540" y="1776" textAnchor="middle" fontSize="44" fontWeight="800" fill="#fff">Made with First Place (demo)</text>
         </svg>
         <div className="share-copy">
           <h2>Flex your first place</h2>
@@ -417,7 +417,7 @@ export function UnderTheHood() {
       <div className="hood-head">
         <div>
           <b>&lt;/&gt; Under the hood</b>
-          <span className="muted small"> Product data simulated · calls follow Shopify Global Catalog MCP + UCP Cart/Checkout</span>
+          <span className="muted small"> Demo mode: every call below runs in your browser against sample products. It shows the intended flow (discovery via Shopify Global Catalog, cart and checkout via UCP). No live Shopify requests are made.</span>
         </div>
         <div className="hood-actions">
           <span className="muted small">{s.events.length} calls</span>
@@ -432,7 +432,7 @@ export function UnderTheHood() {
               <span className="t">{e.at}</span>
               <span className={`tool tool-${e.tool.split(/[._]/)[0]}`}>{e.tool}</span>
               <span className="summary">{summarize(e.request)}</span>
-              <span className="status">● {e.status}</span>
+              <span className="status">● simulated · intended: {/^(cart|checkout)/.test(e.tool) ? 'UCP' : 'Global Catalog'}</span>
             </button>
             {open === e.id && (
               <div className="ev-body">

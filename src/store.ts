@@ -17,7 +17,7 @@ export interface State {
   positions: Record<Slot, number>;
   qty: Record<Slot, number>;
   answered: Record<string, true>;
-  asking: Record<string, 'loading' | 'done'>;
+  asking: Record<string, 'loading' | 'replied' | 'done'>;
   selectedSlot: Slot | null;
   budget: number;
   doorWidth: number;
@@ -132,7 +132,7 @@ export const actions = {
       });
     }
     const shops = new Set(SLOTS.map((sl) => products[sl]!.merchant.name)).size;
-    if (!quiet) toast(`${v.emoji} 6 pieces from ${shops} independent shops`);
+    if (!quiet) toast(`${v.emoji} 6 sample pieces from ${shops} sample shops`);
     syncCart();
   },
 
@@ -197,6 +197,11 @@ export const actions = {
     set((s) => ({ asking: { ...s.asking, [productId]: 'loading' } }));
     await catalog.askBusiness(p.merchant.domain, 'What are the exact dimensions, and how does it ship?', productId);
     await new Promise((r) => setTimeout(r, 750));
+    // Show the simulated reply first; the verdict only changes when the shopper chooses to use it.
+    set((s) => ({ asking: { ...s.asking, [productId]: 'replied' } }));
+  },
+
+  useAnswer(productId: string) {
     set((s) => ({ asking: { ...s.asking, [productId]: 'done' }, answered: { ...s.answered, [productId]: true } }));
   },
 

@@ -37,8 +37,9 @@ export function FitReceipt() {
   const asking = s.asking[p.id];
   const answered = s.answered[p.id];
   const stamp = STAMP[r.overall];
-  const spaceText = { fits: 'FITS', tight: 'TIGHT', 'wont-fit': "WON'T FIT HERE", 'cant-tell': "CAN'T TELL" }[r.space.verdict];
-  const doorText = { 'gets-through': 'GETS THROUGH', tight: 'TIGHT SQUEEZE', 'wont-get-through': "WON'T GET THROUGH", 'cant-tell': "CAN'T TELL" }[r.door.verdict];
+  const spaceText = { fits: 'FITS', tight: 'TIGHT', 'wont-fit': "WON'T FIT HERE", 'cant-tell': 'UNKNOWN' }[r.space.verdict];
+  const doorText = { 'gets-through': 'CLEARS DOOR', tight: 'TIGHT AT DOOR', 'wont-get-through': 'TOO BIG FOR DOOR', 'cant-tell': 'UNKNOWN' }[r.door.verdict];
+  const doorScope = `Door check covers only the ${s.unit === 'in' ? Math.round(s.doorWidth / 2.54) + '″' : Math.round(s.doorWidth) + ' cm'} doorway you entered, not stairs, halls or elevators.`;
   const compatText = { matches: 'MATCHES', partial: 'PARTIAL', clashes: 'CLASHES' }[r.compat.verdict];
   const lineCls = (good: boolean, bad: boolean) => (bad ? 'bad' : good ? 'good' : 'warn');
 
@@ -46,7 +47,7 @@ export function FitReceipt() {
     <section className="receipt" aria-label={`Fit Receipt for ${p.title}`} aria-live="polite">
       <div className="receipt-head">
         <span>{p.merchant.name.toUpperCase()}</span>
-        <span className="indie">indie shop</span>
+        <span className="indie">sample shop</span>
       </div>
       <div className="receipt-title">
         <div>
@@ -69,7 +70,7 @@ export function FitReceipt() {
           <span className={`pill pill-sm ${r.door.verdict === 'gets-through' ? 'v-good' : r.door.verdict === 'wont-get-through' ? 'v-bad' : r.door.verdict === 'tight' ? 'v-warn' : 'v-est'}`}>Door · {doorText.toLowerCase()}</span>
           <span className={`pill pill-sm ${r.compat.verdict === 'matches' ? 'v-good' : r.compat.verdict === 'clashes' ? 'v-bad' : 'v-warn'}`}>Vibe · {compatText.toLowerCase()}</span>
           {r.renter.filter((f) => f.tone !== 'good').map((f) => <span key={f.label} className={`pill pill-sm ${f.tone === 'bad' ? 'v-bad' : 'v-warn'}`}>{f.label}</span>)}
-          <small className="r-why">{r.overall === "Won't fit" ? (r.door.verdict === 'wont-get-through' ? r.door.note : r.space.note) : r.space.note}</small>
+          <small className="r-why">{r.overall === "Won't fit" ? (r.door.verdict === 'wont-get-through' ? r.door.note : r.space.note) : r.space.note} {doorScope}</small>
         </div>
       )}
       {open && <ul className="r-lines">
@@ -79,7 +80,7 @@ export function FitReceipt() {
         </li>
         <li className={lineCls(r.door.verdict === 'gets-through', r.door.verdict === 'wont-get-through')}>
           <span>02 DOORWAY</span><i /><b>{doorText}</b>
-          <small>{r.door.note}{r.door.estimated && r.door.verdict !== 'cant-tell' && p.slot !== 'rug' ? ' (estimate)' : ''}</small>
+          <small>{r.door.note}{r.door.estimated && r.door.verdict !== 'cant-tell' && p.slot !== 'rug' ? ' (estimate)' : ''} {doorScope}</small>
         </li>
         <li className={lineCls(r.compat.verdict === 'matches', r.compat.verdict === 'clashes')}>
           <span>03 GOES WITH YOUR STUFF</span><i /><b>{compatText}</b>
@@ -103,10 +104,14 @@ export function FitReceipt() {
           {asking === 'loading' && (
             <div className="bubble typing" aria-label="Merchant is typing"><span /><span /><span /></div>
           )}
-          {answered && p.merchantQuestionResponse && (
+          {(asking === 'replied' || answered) && p.merchantQuestionResponse && (
             <div className="bubble from-shop">
+              <div className="sim">Simulated reply · demo data, not a real shop</div>
               <b>{p.merchant.name}:</b> {p.merchantQuestionResponse.answer}
-              <div className="sim">Simulated merchant response · ask_business</div>
+              {asking === 'replied' && !answered && (
+                <button className="btn btn-purple sm use-dims" onClick={() => actions.useAnswer(p.id)}>Use these sample dimensions</button>
+              )}
+              {answered && <div className="sim">Verdict below now uses these simulated dimensions.</div>}
             </div>
           )}
           {!asking && (
@@ -118,10 +123,10 @@ export function FitReceipt() {
       <div className="receipt-foot">
         <div className="stamp-wrap">
           <div key={`${p.id}-${r.overall}-${answered ? 1 : 0}`} className={`stamp ${stamp.cls}`}>{stamp.text}</div>
-          <span className="r-sample">in the sample studio</span>
+          <span className="r-sample">IN THE SAMPLE STUDIO</span>
         </div>
         <div className="r-actions">
-          <button className="btn btn-purple" onClick={() => actions.set({ panel: 'ar' })}>📱 Try it in my room</button>
+          <button className="btn btn-purple" onClick={() => actions.set({ panel: 'ar' })}>📱 AR preview (simulated)</button>
           <button className="btn btn-ghost" onClick={() => actions.remove(slot)} aria-label={`Remove ${p.title} from the room`}>✕</button>
         </div>
       </div>
